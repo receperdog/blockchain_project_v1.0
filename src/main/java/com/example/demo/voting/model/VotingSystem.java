@@ -1,5 +1,7 @@
 package com.example.demo.voting.model;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +13,6 @@ import java.security.NoSuchAlgorithmException;
 public class VotingSystem {
     private Blockchain blockchain;
     private Map<String, Integer> candidateVotes;
-
     private List<String> candidates;
 
     public VotingSystem() {
@@ -21,35 +22,52 @@ public class VotingSystem {
 
     public void setBlockchain(Blockchain blockchain) {
         this.blockchain = blockchain;
+        synchronizeCandidateVotes();
     }
 
-    public void castVote(String voterId, String candidate) {
+    public void castVote(String voterId, String candidate, PrivateKey privateKey, PublicKey publicKey) {
         if (hasVoted(voterId)) {
             System.out.println("You have already cast your vote.");
             return;
         }
 
-        // Check if the candidate is valid
         if (!isValidCandidate(candidate)) {
             System.out.println("Invalid candidate.");
             return;
         }
 
-        // Create a new transaction and add it to the blockchain
         Transaction transaction = new Transaction(voterId, candidate);
+        transaction.generateSignature(privateKey);
+
+        if (!transaction.verifySignature(publicKey)) {
+            System.out.println("Invalid transaction signature.");
+            return;
+        }
+
         Block newBlock = new Block(blockchain.getLatestBlock().getIndex() + 1,
                 blockchain.getLatestBlock().getHash(), transaction);
 
-        // Check if consensus is reached before adding the block
         if (ConsensusProtocol.reachConsensus(blockchain)) {
             blockchain.addBlock(newBlock);
-
-            // Update the vote count for the candidate
-            candidateVotes.put(candidate, candidateVotes.getOrDefault(candidate, 0) + 1);
-
+            updateCandidateVotes(candidate);
             System.out.println("Vote cast successfully!");
         } else {
             System.out.println("Consensus not reached. Vote not cast.");
+        }
+    }
+
+    private void updateCandidateVotes(String candidate) {
+        candidateVotes.put(candidate, candidateVotes.getOrDefault(candidate, 0) + 1);
+    }
+
+    private void synchronizeCandidateVotes() {
+        candidateVotes.clear();
+        for (Block block : blockchain.getChain()) {
+            Transaction transaction = block.getData();
+            if (transaction != null && !transaction.getCandidate().equals("Genesis Block")) {
+                String candidate = transaction.getCandidate();
+                candidateVotes.put(candidate, candidateVotes.getOrDefault(candidate, 0) + 1);
+            }
         }
     }
 
@@ -84,8 +102,7 @@ public class VotingSystem {
     }
 
     public boolean isValidCandidate(String candidate) {
-        // Add your own logic to validate the candidate, e.g., checking against a list of valid candidates
-        return true;
+        return candidates.contains(candidate);
     }
 
     public List<Block> getChain() {
@@ -99,5 +116,4 @@ public class VotingSystem {
     public List<String> getCandidates() {
         return candidates;
     }
-
 }

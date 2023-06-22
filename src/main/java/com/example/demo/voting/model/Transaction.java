@@ -1,9 +1,11 @@
 package com.example.demo.voting.model;
 
+import lombok.NoArgsConstructor;
+
 import java.io.UnsupportedEncodingException;
 import java.security.*;
 import java.util.Base64;
-
+@NoArgsConstructor
 public class Transaction {
     private String voterId;
     private String candidate;

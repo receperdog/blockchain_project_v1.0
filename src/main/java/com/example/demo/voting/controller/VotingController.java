@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +26,19 @@ public class VotingController {
 
     @PostMapping
     public ResponseEntity<String> castVote(@RequestParam String voterId, @RequestParam String candidate) {
-        votingService.castVote(voterId, candidate);
+        KeyPair keyPair = generateKeyPair();
+        votingService.castVote(voterId, candidate, keyPair.getPrivate(), keyPair.getPublic());
         return ResponseEntity.ok("Vote has been cast successfully!");
+    }
+
+    private KeyPair generateKeyPair() {
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048);
+            return keyGen.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @GetMapping("/results")
@@ -32,7 +46,5 @@ public class VotingController {
         Map<String, Integer> results = votingService.getVotingResults();
         return ResponseEntity.ok(results);
     }
-
-    // You can add more methods here to expose more operations via your API.
-    // For example, a method to get the voting results might be useful.
 }
+

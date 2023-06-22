@@ -1,16 +1,24 @@
 package com.example.demo.voting.model;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+
+import java.io.Serializable;
 import java.util.Date;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Block {
+@NoArgsConstructor
+public class Block implements Serializable {
     private int index;
     private long timestamp;
     private String previousHash;
     private String hash;
     private Transaction data;
+
+    private boolean valid;
 
     public Block(int index, String previousHash, Transaction data) {
         this.index = index;
@@ -58,6 +66,10 @@ public class Block {
     public boolean isValid() {
         // Check if the current hash is valid by comparing it with the calculated hash
         return hash.equals(calculateHash());
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
     }
 }
 

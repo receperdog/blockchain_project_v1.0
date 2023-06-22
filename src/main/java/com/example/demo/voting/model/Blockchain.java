@@ -5,6 +5,8 @@ import java.util.List;
 
 public class Blockchain {
     private List<Block> chain;
+    private boolean valid;
+    private Block latestBlock;
 
     public Blockchain() {
         chain = new ArrayList<>();
@@ -56,7 +58,14 @@ public class Blockchain {
         return true;
     }
 
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+
     public List<Block> getChain() {
         return chain;
+    }
+    public void setLatestBlock(Block latestBlock) {
+        this.latestBlock = latestBlock;
     }
 }
