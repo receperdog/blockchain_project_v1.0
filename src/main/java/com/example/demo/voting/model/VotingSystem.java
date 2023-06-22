@@ -15,9 +15,12 @@ public class VotingSystem {
     private List<String> candidates;
 
     public VotingSystem() {
-        blockchain = new Blockchain();
         candidateVotes = new HashMap<>();
         candidates = Arrays.asList("Candidate1", "Candidate2", "Candidate3", "Candidate4");
+    }
+
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
     }
 
     public void castVote(String voterId, String candidate) {
