@@ -13,6 +13,8 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Component
@@ -34,23 +36,31 @@ public class VotingService {
         return votingSystem.getCandidates();
     }
 
-    @Scheduled(fixedDelay = 10000) // 10 seconds
+    @Scheduled(fixedDelay = 15000) // 10 seconds
     public void synchronizeBlockchain() {
         // List of peers could be fetched from a config file or other source
-        List<String> peerUrls = Arrays.asList("http://localhost:8081", "http://localhost:8082");
+        List<String> peerUrls = Arrays.asList("http://localhost:8081", "http://localhost:8082",
+                "http://localhost:8083", "http://localhost:8084", "http://localhost:8085",
+                "http://localhost:8086", "http://localhost:8087");
+
+        ExecutorService executorService = Executors.newFixedThreadPool(peerUrls.size());
 
         for (String peerUrl : peerUrls) {
-            try {
-                System.out.println("SYNCING WITH PEER AT " + peerUrl);
-                Blockchain peerBlockchain = peerNetworkingService.getBlockchainFromPeer(peerUrl);
-                if (peerBlockchain != null && peerBlockchain.isValid() && peerBlockchain.getChain().size() > votingSystem.getChain().size()) {
-                    peerService.setBlockchain(peerBlockchain);
-                    votingSystem.setBlockchain(peerBlockchain);
+            executorService.submit(() -> {
+                try {
+                    System.out.println("SYNCING WITH PEER AT " + peerUrl);
+                    Blockchain peerBlockchain = peerNetworkingService.getBlockchainFromPeer(peerUrl);
+                    if (peerBlockchain != null && peerBlockchain.isValid() && peerBlockchain.getChain().size() > votingSystem.getChain().size()) {
+                        peerService.setBlockchain(peerBlockchain);
+                        votingSystem.setBlockchain(peerBlockchain);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error synchronizing with peer at " + peerUrl + ": " + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.out.println("Error synchronizing with peer at " + peerUrl + ": " + e.getMessage());
-            }
+            });
         }
+
+        executorService.shutdown();
     }
 
 }

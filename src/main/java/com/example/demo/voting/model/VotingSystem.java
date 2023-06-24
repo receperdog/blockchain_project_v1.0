@@ -25,7 +25,7 @@ public class VotingSystem {
         synchronizeCandidateVotes();
     }
 
-    public void castVote(String voterId, String candidate, PrivateKey privateKey, PublicKey publicKey) {
+    public synchronized void castVote(String voterId, String candidate, PrivateKey privateKey, PublicKey publicKey) {
         if (hasVoted(voterId)) {
             System.out.println("You have already cast your vote.");
             return;
@@ -50,7 +50,7 @@ public class VotingSystem {
         if (ConsensusProtocol.reachConsensus(blockchain)) {
             blockchain.addBlock(newBlock);
             updateCandidateVotes(candidate);
-            System.out.println("Vote cast successfully!");
+            System.out.println("Casted vote successfully!");
         } else {
             System.out.println("Consensus not reached. Vote not cast.");
         }
