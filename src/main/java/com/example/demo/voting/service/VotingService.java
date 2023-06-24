@@ -13,6 +13,8 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,7 +38,7 @@ public class VotingService {
         return votingSystem.getCandidates();
     }
 
-    @Scheduled(fixedDelay = 15000) // 10 seconds
+    @Scheduled(fixedDelay = 15000) // 15 seconds
     public void synchronizeBlockchain() {
         // List of peers could be fetched from a config file or other source
         List<String> peerUrls = Arrays.asList("http://localhost:8081", "http://localhost:8082",
@@ -49,12 +51,14 @@ public class VotingService {
             executorService.submit(() -> {
                 try {
                     System.out.println("SYNCING WITH PEER AT " + peerUrl);
-                    Blockchain peerBlockchain = peerNetworkingService.getBlockchainFromPeer(peerUrl);
+                    CompletableFuture<Blockchain> blockchainFuture = peerNetworkingService.getBlockchainFromPeerAsync(peerUrl);
+                    Blockchain peerBlockchain = blockchainFuture.get(); // Wait for the result of the CompletableFuture
+
                     if (peerBlockchain != null && peerBlockchain.isValid() && peerBlockchain.getChain().size() > votingSystem.getChain().size()) {
                         peerService.setBlockchain(peerBlockchain);
                         votingSystem.setBlockchain(peerBlockchain);
                     }
-                } catch (Exception e) {
+                } catch (InterruptedException | ExecutionException e) {
                     System.out.println("Error synchronizing with peer at " + peerUrl + ": " + e.getMessage());
                 }
             });
@@ -62,6 +66,5 @@ public class VotingService {
 
         executorService.shutdown();
     }
-
 }
 
