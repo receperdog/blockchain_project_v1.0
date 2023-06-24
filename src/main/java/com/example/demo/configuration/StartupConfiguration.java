@@ -9,6 +9,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.UUID;
 
 @Configuration
 public class StartupConfiguration {
@@ -17,8 +18,8 @@ public class StartupConfiguration {
     public CommandLineRunner commandLineRunner(VotingService votingService) {
         return args -> {
             Random random = new Random();
-            for (int i = 0; i < 10; i++) {
-                String voterId = "Voter" + i;
+            for (int i = 0; i < 1000; i++) {
+                String voterId = "Voter" + UUID.randomUUID().toString();
                 int candidateIndex = random.nextInt(votingService.getCandidates().size());
                 String candidate = votingService.getCandidates().get(candidateIndex);
                 KeyPair keyPair = generateKeyPair();
